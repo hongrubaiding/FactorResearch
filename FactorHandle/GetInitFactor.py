@@ -7,6 +7,7 @@ Created on Wed Jul 28 10:11:40 2021
 
 import pandas as pd
 from FactorHandle.CommonMethod import CommonMethod
+from datetime import datetime
 
 
 class GetInitFacort:
@@ -66,12 +67,30 @@ class GetInitFacort:
         if df_fac.empty:
             return
         
+        # 按月获取行情，减少请求数据量
         df_trade_date = self.common_method_demo.get_tradedate_df(
-            dic_param["start_date"], dic_param["end_date"]).set_index("TradingDate")
+            dic_param["start_date"], dic_param["end_date"])
+        df_trade_date["TradingDate"] = [datetime.strftime(date_str,"%Y-%m-%d") 
+                                for date_str in df_trade_date["TradingDate"]]
+        month_end_list = df_trade_date[df_trade_date["IfMonthEnd"]==1]["TradingDate"]
         
+        # 指数成分股信息
+        df_index_stock = self.common_method_demo.get_bench_stock(
+            dic_param["bench_inner"], dic_param["start_date"], dic_param["end_date"])
         
-        for fac_style,temp_df in df_fac.groupby("大类因子"):
-           if fac_style in self.dic_get_fac:
-               self.dic_get_fac.get(fac_style)(temp_df)
+        last_date = df_trade_date["TradingDate"].min()
+        for month_end in month_end_list:
+            date_list =df_trade_date[(df_trade_date["TradingDate"]<=month_end)
+                &(df_trade_date["TradingDate"]>last_date)]
+            self.logger.info("本次因子计算开始日期:%s;截止日期:%s"%(date_list[0],date_list[-1]))
             
+            index_start = df_index_stock[df_index_stock["EndDate"]>=date_list[0]]["EndDate"].min()
+            index_end = df_index_stock[df_index_stock["EndDate"]>=date_list[-1]]["EndDate"].min()
+            temp_index_stock = df_index_stock[(df_index_stock["EndDate"]>=index_start)&
+                                              (df_index_stock["EndDate"]<=index_end)]
+                                     
+            for fac_style,temp_df in df_fac.groupby("大类因子"):
+               if fac_style in self.dic_get_fac:
+                   self.dic_get_fac.get(fac_style)(temp_df,temp_index_stock)
+                
             
