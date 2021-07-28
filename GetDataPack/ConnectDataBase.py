@@ -11,7 +11,7 @@ class ConnectDataBase:
 
     def connect_database(self,flag='JYDB-Test'):
         cf = configparser.ConfigParser()
-        cf.read(os.path.abspath('DataBase.ini'))
+        cf.read(os.path.abspath('.\\GetDataPack\\DataBase.ini'))
         database_info = cf.items(flag)
         database_info_dic = {loc[0]: loc[1] for loc in database_info}
 
