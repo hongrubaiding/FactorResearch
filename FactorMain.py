@@ -21,8 +21,8 @@ class FactorMain:
     
     def init_param(self,):
         dic_param = {}
-        dic_param['start_date']="2010-01-01"
-        dic_param["end_date"] = "2017-01-01"
+        dic_param['start_date']="2012-01-01"
+        dic_param["end_date"] = "2018-01-01"
         
         #基准指数代码
         dic_param["bench_inner"] = 14110
